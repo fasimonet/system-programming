@@ -2,7 +2,12 @@
 /*                              Signaux et tubes */
 /* ================================================================================ */
 
-/* 
+/*
+
+Auteur : Fabien SIMONET
+Date : 31/01/2020
+
+Objectif :
 
 Dans cet exercice, vous allez coordonner plusieurs processus pour simuler le comportement d'une horloge. 
 L'utilisation de sleep() est donc prohibée. 
@@ -13,11 +18,6 @@ Quand le premier a vu une seconde passer, il réveille le deuxième qui incréme
 
 Ajoutez deux autres processus pour compter les minutes et les heures. 
 On aura donc quatre processus au total. Leur réveil se fera en cascade.
-
-Écrivez un programme qui réinitialise l'heure à une heure, minute et seconde données. 
-Ce programme communiquera avec le processus principal de l'horloge.
-
-Écrivez un programme qui arrête l'horloge et fait le ménage. 
 
 */
 
@@ -39,6 +39,16 @@ typedef struct counters
     int hour_cpt;
 };
 
+void displayHeader()
+{
+    printf("================ Horloge ================\nMon pid est : %d\n\n", getpid());
+}
+
+void signal_handler(int i, siginfo_t * s, void *v) { 
+  printf("Received signal\n"); 
+  // Reinitialiser ici
+} 
+
 // Reinitialise les heures, minutes et secondes
 void reinit(struct counters* c, int s_cpt, int m_cpt, int h_cpt)
 {
@@ -57,6 +67,11 @@ int main(int argc, char ** argv) {
 
     struct counters cpts;
 
+    struct sigaction action;
+    action.sa_sigaction = signal_handler;
+    sigfillset(&action.sa_mask);
+    sigaction(SIGUSR1, &action, 0);
+
     /// Initialisation des compteurs
     if (argc >= 4) {
         reinit(&cpts, atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
@@ -65,6 +80,8 @@ int main(int argc, char ** argv) {
     {
         reinit(&cpts, 0, 0, 0);
     }
+
+    displayHeader();
 
     printf("Init : hour = %d, min = %d, sec = %d\n", cpts.hour_cpt, cpts.min_cpt, cpts.sec_cpt);
 
@@ -107,6 +124,7 @@ int main(int argc, char ** argv) {
                 
                 // Attente active
                 while (1) {
+                    
                     // Mise a jour de la date courante
                     current_date = time(NULL);
                     if (current_date-last_date >= 1) { // Si une seconde est passee
