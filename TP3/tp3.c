@@ -44,6 +44,7 @@ void displayHeader()
     printf("================ Horloge ================\nMon pid est : %d\n\n", getpid());
 }
 
+// Fonction qui se lance lors de la reception d'un signal SIGUSR1
 void signal_handler(int i, siginfo_t * s, void *v) { 
   printf("Received signal\n"); 
   // Reinitialiser ici
@@ -67,20 +68,24 @@ int main(int argc, char ** argv) {
 
     struct counters cpts;
 
+    // Amorcage du signal
     struct sigaction action;
     action.sa_sigaction = signal_handler;
     sigfillset(&action.sa_mask);
     sigaction(SIGUSR1, &action, 0);
 
-    /// Initialisation des compteurs
+    // Initialisation des compteurs
     if (argc >= 4) {
+        // Initialise l'horloge à une heure donnee
         reinit(&cpts, atoi(argv[1]), atoi(argv[2]), atoi(argv[3]));
     } 
     else 
     {
+        // Initialise l'horloge a minuit pile
         reinit(&cpts, 0, 0, 0);
     }
 
+    // Affichage de l'entete
     displayHeader();
 
     printf("Init : hour = %d, min = %d, sec = %d\n", cpts.hour_cpt, cpts.min_cpt, cpts.sec_cpt);
